@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 徹底清除 Vite 預設的干擾 */
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: dark;
+  background-color: #09090b; /* 強制背景為鋅黑色 */
+}
+
+/* 關鍵修正：移除原本 body 的 flex 與 place-items */
+body {
+  margin: 0;
+  display: block !important; /* 解放內容，不再被擠在中間 */
+  min-width: 100vw;
+  min-height: 100vh;
+  background-color: #09090b;
+  color: #f4f4f5;
+  overflow-x: hidden;
+}
+
+/* 讓標題漸層動起來 */
+.animate-gradient {
+  background-size: 200% auto;
+  animation: shine 3s linear infinite;
+}
+
+@keyframes shine {
+  to { background-position: 200% center; }
+}
+
+/* 讓滾動條變隱形高級感 */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 10px;
+}

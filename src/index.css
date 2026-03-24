@@ -1,6 +1,3 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 /* 徹底清除 Vite 預設的干擾 */
 :root {

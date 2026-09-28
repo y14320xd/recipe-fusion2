@@ -413,7 +413,7 @@ const recipesByFish = {
       nutrition: "黑椒惹味",
       videoUrl: "https://www.youtube.com/embed/9bg13eDqIGE",
       steps: [
-        "1. 吳郭魚去骨取菲力。",
+        "1. 吳郭魚 Linux 魚去骨取菲力。",
         "2. 魚片擦乾並撒少量鹽。",
         "3. 平底鍋加油將魚片煎熟。",
         "4. 魚片取出備用。",
@@ -1192,7 +1192,7 @@ const recipesByFish = {
         "2. 表面抹少量鹽。",
         "3. 輕拍太白粉。",
         "4. 平底鍋加油。",
-        "5. 魚片兩面煎至焦脆。",
+        "5. 魚片 Linux 兩面煎至焦脆。",
         "6. 將多餘油脂倒出。",
         "7. 加入蒜末與辣椒碎爆香。",
         "8. 放回魚片並撒椒鹽粉。",
@@ -2026,9 +2026,29 @@ const recipesByFish = {
 };
 
 const fishList = Object.keys(recipesByFish);
-const orangeCook = "#e67e22"; 
-const blueMarine = "#2c3e50"; 
-const bgWarm = "#fcfaf7"; 
+const orangeCook = "#e67e22";
+const blueMarine = "#2c3e50";
+const bgWarm = "#fcfaf7";
+
+// --- 四大海鮮專屬辛香料與常用調味設定 ---
+const commonPantryByFish = {
+  "吳郭魚": {
+    label: "紅燒/乾煎必備一鍵全選 (大蒜/薑片/蔥段/醬油/米酒)",
+    items: ["大蒜", "薑片", "蔥段", "醬油", "米酒"]
+  },
+  "鮭魚": {
+    label: "常用提鮮調味一鍵全選 (黑胡椒/檸檬/奶油/大蒜/醬油)",
+    items: ["黑胡椒", "檸檬", "奶油", "大蒜", "醬油"]
+  },
+  "鱸魚": {
+    label: "清蒸/鮮湯必備一鍵全選 (薑絲/蔥絲/米酒/醬油/大蒜)",
+    items: ["薑絲", "蔥絲", "米酒", "醬油", "大蒜"]
+  },
+  "白蝦": {
+    label: "熱炒/爆香必備一鍵全選 (大蒜/蒜末/黑胡椒/蔥花/米酒)",
+    items: ["大蒜", "蒜末", "黑胡椒", "蔥花", "米酒"]
+  }
+};
 
 export default function App() {
   const [step, setStep] = useState(1);
@@ -2038,17 +2058,26 @@ export default function App() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [showBrandStory, setShowBrandStory] = useState(false);
 
+  // --- 手機掃碼 O2O 核心：網址參數自動鎖定海鮮 ---
   useEffect(() => {
     document.body.style.margin = "0";
     document.body.style.backgroundColor = bgWarm;
-    document.body.style.touchAction = "manipulation"; 
-    
+    document.body.style.touchAction = "manipulation";
+
     if (!document.getElementById("fa-style")) {
       const link = document.createElement("link");
       link.id = "fa-style";
       link.rel = "stylesheet";
       link.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css";
       document.head.appendChild(link);
+    }
+
+    // 支援直接掃碼 URL 參數 (例如 ?fish=吳郭魚 或 ?fish=白蝦)
+    const urlParams = new URLSearchParams(window.location.search);
+    const fishParam = urlParams.get("fish");
+    if (fishParam && recipesByFish[fishParam]) {
+      setSelectedFish(fishParam);
+      setStep(2);
     }
   }, []);
 
@@ -2057,12 +2086,21 @@ export default function App() {
     return [...new Set((recipesByFish[selectedFish] || []).flatMap(r => r.ingredients))];
   }, [selectedFish]);
 
-  const commonPantry = ["大蒜", "薑片", "薑絲", "蔥花", "蔥段", "醬油", "米酒", "黑胡椒"];
+  // 當前選中海鮮的專屬常備辛香料
+  const currentPantryConfig = useMemo(() => {
+    if (!selectedFish || !commonPantryByFish[selectedFish]) {
+      return {
+        label: "常見辛香料一鍵全選 (蔥/薑/蒜/米酒等)",
+        items: ["大蒜", "薑片", "薑絲", "蔥花", "蔥段", "醬油", "米酒", "黑胡椒"]
+      };
+    }
+    return commonPantryByFish[selectedFish];
+  }, [selectedFish]);
 
   const scoredRecipes = useMemo(() => {
     if (!selectedFish) return [];
     const pool = recipesByFish[selectedFish] || [];
-    
+
     if (selectedIngredients.length === 0) {
       return pool.map(r => ({ ...r, matchCount: 0, isPerfect: true }));
     }
@@ -2086,8 +2124,9 @@ export default function App() {
       });
   }, [selectedFish, selectedIngredients]);
 
+  // 依海鮮專屬清單進行快捷全選
   const handleSelectCommon = () => {
-    const availableCommon = commonPantry.filter(item => allIngredientsOfFish.includes(item));
+    const availableCommon = currentPantryConfig.items.filter(item => allIngredientsOfFish.includes(item));
     setSelectedIngredients(prev => [...new Set([...prev, ...availableCommon])]);
   };
 
@@ -2112,10 +2151,10 @@ export default function App() {
   return (
     <div style={{ color: "#2c3e50", minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", WebkitFontSmoothing: "antialiased" }}>
       
-      <div style={{ padding: "24px 16px 60px 16px", flex: "1" }}>
+      <div style={{ padding: "20px 16px 60px 16px", flex: "1" }}>
         
         {/* 頂部品牌 Header */}
-        <header style={{ textAlign: "center", marginBottom: "32px", position: "relative" }}>
+        <header style={{ textAlign: "center", marginBottom: "26px", position: "relative" }}>
           <motion.button 
             whileTap={{ scale: 0.92 }} 
             onClick={() => setShowBrandStory(true)} 
@@ -2167,7 +2206,14 @@ export default function App() {
             {/* STEP 2: 點選廚房現有配料 */}
             {step === 2 && (
               <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                
+                {/* 廚房急凍退冰貼心提醒卡片 */}
+                <div style={{ backgroundColor: "#e8f4fd", padding: "10px 14px", borderRadius: "12px", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px", border: "1px solid #cbe4fb" }}>
+                  <i className="fa-solid fa-snowflake" style={{ color: "#1976d2", fontSize: "0.95rem" }}></i>
+                  <span style={{ fontSize: "0.8rem", color: "#1565c0", fontWeight: "700" }}>鮮活提醒：烹飪前放置冷藏自然退冰，肉質最甘甜！</span>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
                   <button onClick={() => setStep(1)} style={{ background: "none", border: "none", color: orangeCook, fontWeight: "bold", cursor: "pointer", fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "6px" }}>
                     <i className="fa-solid fa-arrow-left"></i> 重選海鮮 ({selectedFish})
                   </button>
@@ -2178,22 +2224,22 @@ export default function App() {
                   )}
                 </div>
 
-                <div style={{ textAlign: "center", marginBottom: "18px" }}>
+                <div style={{ textAlign: "center", marginBottom: "16px" }}>
                   <h2 style={{ fontSize: "1.25rem", fontWeight: "800", color: blueMarine, margin: 0 }}>手邊或冰箱有什麼配料？</h2>
                   <p style={{ color: "#7f8c8d", fontSize: "0.85rem", marginTop: "5px" }}>可複選，系統將即時計算能做的料理</p>
                 </div>
 
-                {/* 快捷點選列 */}
+                {/* 動態專屬辛香料快捷按鈕 */}
                 <div style={{ display: "flex", justifyContent: "center", gap: "10px", marginBottom: "16px" }}>
                   <button 
                     onClick={handleSelectCommon} 
-                    style={{ fontSize: "0.8rem", padding: "6px 14px", backgroundColor: "#fff", border: `1px solid ${orangeCook}`, color: orangeCook, borderRadius: "20px", cursor: "pointer", fontWeight: "600" }}>
-                    常見辛香料一鍵全選 (蔥/薑/蒜/米酒等)
+                    style={{ fontSize: "0.8rem", padding: "7px 16px", backgroundColor: "#fff", border: `1.5px solid ${orangeCook}`, color: orangeCook, borderRadius: "20px", cursor: "pointer", fontWeight: "700", boxShadow: "0 2px 6px rgba(230, 126, 34, 0.15)" }}>
+                    {currentPantryConfig.label}
                   </button>
                 </div>
 
                 {/* 配料標籤按鈕池 */}
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "9px", justifyContent: "center", marginBottom: "30px", maxHeight: "40vh", overflowY: "auto", padding: "4px" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "9px", justifyContent: "center", marginBottom: "30px", maxHeight: "38vh", overflowY: "auto", padding: "4px" }}>
                   {allIngredientsOfFish.map(ing => {
                     const isSelected = selectedIngredients.includes(ing);
                     return (
@@ -2220,7 +2266,7 @@ export default function App() {
                   })}
                 </div>
 
-                {/* 查看按鈕 */}
+                {/* 查看推薦食譜大按鈕 */}
                 <motion.button 
                   whileTap={{ scale: 0.98 }} 
                   onClick={() => setStep(3)} 
@@ -2436,12 +2482,6 @@ export default function App() {
                     料理完成！請享用熱騰騰的美味
                   </div>
                 )}
-              </div>
-
-              {/* 退冰提醒 */}
-              <div style={{ backgroundColor: "#e8f4fd", padding: "10px 14px", borderRadius: "12px", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px", border: "1px solid #cbe4fb" }}>
-                <i className="fa-solid fa-snowflake" style={{ color: "#1976d2", fontSize: "0.95rem" }}></i>
-                <span style={{ fontSize: "0.8rem", color: "#1565c0", fontWeight: "700" }}>鮮活提醒：烹飪前冷藏自然退冰，鎖住原汁更鮮美！</span>
               </div>
               
               {/* 客服與 Instagram 分享按鈕 */}

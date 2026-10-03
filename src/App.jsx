@@ -1,5 +1,34 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { recipeVideoMap, buildYoutubeEmbedUrl, normalizeYoutubeUrl } from "./data/recipeVideoMap";
+
+export function normalizeRecipeSteps(steps = []) {
+  return steps.map((step, index) => {
+    if (typeof step === "object" && step !== null) {
+      const start = Number(step.start ?? index * 30);
+      const end = Number(step.end ?? start + 30);
+      return {
+        ...step,
+        text: step.text || "",
+        start,
+        end,
+      };
+    }
+
+    const start = index * 30;
+    return {
+      text: String(step),
+      start,
+      end: start + 30,
+    };
+  });
+}
+
+export function getYoutubeVideoId(videoUrl = "") {
+  if (!videoUrl) return "";
+  const match = videoUrl.match(/(?:v=|\/embed\/|\/shorts\/|youtu\.be\/)([A-Za-z0-9_-]{8,12})/);
+  return match ? match[1] : "";
+}
 
 // --- 食譜資料庫 (招牌菜已配置可嵌入之示範影片與分段秒數，其餘食譜亦完全相容支援) ---
 const recipesByFish = {
@@ -2057,6 +2086,8 @@ export default function App() {
   const [activeRecipe, setActiveRecipe] = useState(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [showBrandStory, setShowBrandStory] = useState(false);
+  const [isStepLocked, setIsStepLocked] = useState(false);
+  const [isVideoLoading, setIsVideoLoading] = useState(false);
 
   // --- 手機掃碼 O2O 核心：網址參數自動鎖定海鮮 ---
   useEffect(() => {
@@ -2130,23 +2161,57 @@ export default function App() {
     setSelectedIngredients(prev => [...new Set([...prev, ...availableCommon])]);
   };
 
+  const normalizedSteps = useMemo(() => normalizeRecipeSteps(activeRecipe?.steps || []), [activeRecipe]);
+  const activeStep = normalizedSteps[currentStepIndex] || null;
+  const resolvedRecipeVideoUrl = useMemo(() => {
+    if (!activeRecipe) return "";
+    const mapped = recipeVideoMap[activeRecipe.name] || activeRecipe.videoUrl || "";
+    return normalizeYoutubeUrl(mapped);
+  }, [activeRecipe]);
+
   const handleOpenRecipe = (recipe) => {
     setActiveRecipe(recipe);
     setCurrentStepIndex(0);
+    setIsStepLocked(false);
+  };
+
+  const handleRecipeStepChange = (nextIndex) => {
+    setCurrentStepIndex(nextIndex);
+    setIsStepLocked(false);
+  };
+
+  const handleCloseRecipe = () => {
+    setActiveRecipe(null);
+    setCurrentStepIndex(0);
+    setIsStepLocked(false);
   };
 
   // 動態組裝當前步驟的 YouTube URL (透過 start 自動跳轉)
   const currentVideoSrc = useMemo(() => {
     if (!activeRecipe) return "";
-    const stepData = activeRecipe.steps[currentStepIndex];
-    const baseUrl = activeRecipe.videoUrl;
+    const stepData = normalizedSteps[currentStepIndex] || normalizedSteps[0];
+    const baseUrl = resolvedRecipeVideoUrl;
 
-    if (stepData && typeof stepData === "object" && stepData.start !== undefined) {
-      const endParam = stepData.end ? `&end=${stepData.end}` : "";
-      return `${baseUrl}?start=${stepData.start}${endParam}&autoplay=1&enablejsapi=1`;
+    if (!baseUrl) return "";
+
+    if (stepData && typeof stepData.start === "number") {
+      const endValue = Number.isFinite(stepData.end) ? stepData.end : null;
+      return buildYoutubeEmbedUrl(baseUrl, stepData.start, endValue);
     }
-    return `${baseUrl}?autoplay=1&enablejsapi=1`;
-  }, [activeRecipe, currentStepIndex]);
+
+    return buildYoutubeEmbedUrl(baseUrl, 0, null);
+  }, [activeRecipe, currentStepIndex, normalizedSteps, resolvedRecipeVideoUrl]);
+
+  useEffect(() => {
+    if (!activeRecipe || !currentVideoSrc) {
+      setIsVideoLoading(false);
+      return undefined;
+    }
+
+    setIsVideoLoading(true);
+    const timer = window.setTimeout(() => setIsVideoLoading(false), 900);
+    return () => window.clearTimeout(timer);
+  }, [activeRecipe, currentVideoSrc]);
 
   return (
     <div style={{ color: "#2c3e50", minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", WebkitFontSmoothing: "antialiased" }}>
@@ -2167,11 +2232,10 @@ export default function App() {
         </header>
 
         <div style={{ maxWidth: "520px", margin: "0 auto" }}>
-          <AnimatePresence mode="wait">
-            
+          <>
             {/* STEP 1: 選主食材 */}
             {step === 1 && (
-              <motion.div key="step1" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+              <motion.div key="step1" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                 <div style={{ textAlign: "center", marginBottom: "24px" }}>
                   <span style={{ backgroundColor: orangeCook, color: "#fff", padding: "4px 12px", borderRadius: "12px", fontSize: "0.8rem", fontWeight: "bold" }}>步驟 1 / 2</span>
                   <h2 style={{ fontSize: "1.25rem", marginTop: "10px", fontWeight: "800", color: blueMarine }}>請對照包裝，選擇您購買的海鮮</h2>
@@ -2205,7 +2269,7 @@ export default function App() {
 
             {/* STEP 2: 點選廚房現有配料 */}
             {step === 2 && (
-              <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
                 
                 {/* 廚房急凍退冰貼心提醒卡片 */}
                 <div style={{ backgroundColor: "#e8f4fd", padding: "10px 14px", borderRadius: "12px", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px", border: "1px solid #cbe4fb" }}>
@@ -2360,7 +2424,7 @@ export default function App() {
                 </div>
               </motion.div>
             )}
-          </AnimatePresence>
+          </>
         </div>
       </div>
 
@@ -2391,22 +2455,22 @@ export default function App() {
       </footer>
 
       {/* 詳細抽屜彈窗：限動式步驟連動播放器 */}
-      <AnimatePresence>
+      <>
         {activeRecipe && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.78)", display: "flex", justifyContent: "center", alignItems: "flex-end", zIndex: 1100 }} onClick={() => setActiveRecipe(null)}>
             <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", damping: 28, stiffness: 220 }} 
               style={{ backgroundColor: "#fff", padding: "20px 20px 36px 20px", borderTopLeftRadius: "28px", borderTopRightRadius: "28px", width: "100%", maxWidth: "520px", maxHeight: "92vh", overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch" }} onClick={e => e.stopPropagation()}>
               
-              <div onClick={() => setActiveRecipe(null)} style={{ width: "100%", padding: "4px 0 14px", cursor: "pointer", display: "flex", justifyContent: "center" }}>
+              <div onClick={handleCloseRecipe} style={{ width: "100%", padding: "4px 0 14px", cursor: "pointer", display: "flex", justifyContent: "center" }}>
                 <div style={{ width: "42px", height: "5px", backgroundColor: "#e2e2e2", borderRadius: "10px" }}></div>
               </div>
 
               {/* IG 限動分段進度條 */}
               <div style={{ display: "flex", gap: "4px", marginBottom: "14px" }}>
-                {activeRecipe.steps.map((_, idx) => (
+                {normalizedSteps.map((_, idx) => (
                   <div 
                     key={idx} 
-                    onClick={() => setCurrentStepIndex(idx)}
+                    onClick={() => handleRecipeStepChange(idx)}
                     style={{ 
                       flex: 1, 
                       height: "4px", 
@@ -2428,19 +2492,25 @@ export default function App() {
               
               {/* 分段連動影片播放器 */}
               <div style={{ borderRadius: "16px", overflow: "hidden", position: "relative", width: "100%", paddingTop: "56.25%", backgroundColor: "#000", marginBottom: "12px", boxShadow: "0 4px 15px rgba(0,0,0,0.08)" }}>
-                <iframe 
-                  key={currentVideoSrc} 
-                  style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }} 
-                  src={currentVideoSrc} 
+                {isVideoLoading && (
+                  <div style={{ position: "absolute", inset: 0, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.7)", color: "#fff", fontWeight: "700", letterSpacing: "1px" }}>
+                    載入影片中…
+                  </div>
+                )}
+
+                <iframe
+                  key={currentVideoSrc}
+                  style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
+                  src={currentVideoSrc}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen 
+                  allowFullScreen
                   title={`${activeRecipe.name} - 步驟 ${currentStepIndex + 1}`}
                 />
               </div>
 
               {/* 外部播放備用連結 */}
               <a 
-                href={activeRecipe.videoUrl.replace("/embed/", "/watch?v=")} 
+                href={normalizeYoutubeUrl(resolvedRecipeVideoUrl).replace("/embed/", "/watch?v=")}
                 target="_blank" 
                 rel="noreferrer" 
                 style={{ display: "block", textAlign: "center", color: orangeCook, fontSize: "0.78rem", marginBottom: "14px", textDecoration: "underline", fontWeight: "600" }}>
@@ -2453,29 +2523,33 @@ export default function App() {
                   當前動作 · STEP {currentStepIndex + 1}
                 </div>
                 <p style={{ fontSize: "1.05rem", lineHeight: "1.6", margin: 0, color: "#2c3e50", fontWeight: "700" }}>
-                  {typeof activeRecipe.steps[currentStepIndex] === "object" 
-                    ? activeRecipe.steps[currentStepIndex].text 
-                    : activeRecipe.steps[currentStepIndex]}
+                  {activeStep?.text || ""}
                 </p>
               </div>
+
+              {isStepLocked && (
+                <div style={{ marginBottom: "14px", padding: "10px 12px", borderRadius: "12px", backgroundColor: "#fff7e6", color: orangeCook, border: "1px solid rgba(230,126,34,0.25)", fontSize: "0.82rem", fontWeight: "700" }}>
+                  這一段已結束，準備好後點擊下一步繼續。
+                </div>
+              )}
 
               {/* 上一步 / 下一步 廚房大按鈕 */}
               <div style={{ display: "grid", gridTemplateColumns: currentStepIndex > 0 ? "1fr 2fr" : "1fr", gap: "10px", marginBottom: "18px" }}>
                 {currentStepIndex > 0 && (
                   <motion.button 
                     whileTap={{ scale: 0.96 }}
-                    onClick={() => setCurrentStepIndex(prev => Math.max(0, prev - 1))}
+                    onClick={() => handleRecipeStepChange(Math.max(0, currentStepIndex - 1))}
                     style={{ padding: "14px", backgroundColor: "#f1f2f6", color: blueMarine, border: "none", borderRadius: "14px", fontWeight: "700", cursor: "pointer", fontSize: "0.95rem" }}>
                     ◀ 上一步
                   </motion.button>
                 )}
 
-                {currentStepIndex < activeRecipe.steps.length - 1 ? (
+                {currentStepIndex < normalizedSteps.length - 1 ? (
                   <motion.button 
                     whileTap={{ scale: 0.96 }}
-                    onClick={() => setCurrentStepIndex(prev => Math.min(activeRecipe.steps.length - 1, prev + 1))}
+                    onClick={() => handleRecipeStepChange(Math.min(normalizedSteps.length - 1, currentStepIndex + 1))}
                     style={{ padding: "14px", backgroundColor: orangeCook, color: "#fff", border: "none", borderRadius: "14px", fontWeight: "800", cursor: "pointer", fontSize: "1rem", boxShadow: "0 4px 12px rgba(230, 126, 34, 0.3)" }}>
-                    下一步動作 ▶
+                    {isStepLocked ? "繼續下一段 ▶" : "下一步動作 ▶"}
                   </motion.button>
                 ) : (
                   <div style={{ textAlign: "center", padding: "12px", backgroundColor: "#e8f8f0", color: "#27ae60", borderRadius: "14px", fontWeight: "800", fontSize: "0.95rem" }}>
@@ -2521,7 +2595,7 @@ export default function App() {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </>
 
       {/* 品牌故事彈窗 */}
       <AnimatePresence>

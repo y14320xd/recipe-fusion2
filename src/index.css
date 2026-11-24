@@ -1,22 +1,34 @@
 
-/* 徹底清除 Vite 預設的干擾 */
+/* 全站基礎設定 */
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "M PLUS Rounded 1c", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color-scheme: dark;
-  background-color: #09090b; /* 強制背景為鋅黑色 */
+  color-scheme: light;
+  background: #f6f1e8;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
 }
 
-/* 關鍵修正：移除原本 body 的 flex 與 place-items */
 body {
   margin: 0;
-  display: block !important; /* 解放內容，不再被擠在中間 */
-  min-width: 100vw;
+  min-width: 320px;
   min-height: 100vh;
-  background-color: #09090b;
-  color: #f4f4f5;
+  background: #f6f1e8;
+  color: #26384f;
   overflow-x: hidden;
+}
+
+button, input, textarea, select {
+  font: inherit;
+}
+
+button, a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+#root {
+  min-height: 100vh;
 }
 
 /* 讓標題漸層動起來 */

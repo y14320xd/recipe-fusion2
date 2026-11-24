@@ -2055,9 +2055,9 @@ const recipesByFish = {
 };
 
 const fishList = Object.keys(recipesByFish);
-const orangeCook = "#e67e22";
-const blueMarine = "#2c3e50";
-const bgWarm = "#fcfaf7";
+const orangeCook = "#c86f3d";
+const blueMarine = "#26384f";
+const bgWarm = "#f6f1e8";
 
 // --- 四大海鮮專屬辛香料與常用調味設定 ---
 const commonPantryByFish = {
@@ -2214,12 +2214,12 @@ export default function App() {
   }, [activeRecipe, currentVideoSrc]);
 
   return (
-    <div style={{ color: "#2c3e50", minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", WebkitFontSmoothing: "antialiased" }}>
+    <div className="app-shell" style={{ color: "#26384f", minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'M PLUS Rounded 1c', 'Noto Sans TC', 'PingFang TC', system-ui, sans-serif", WebkitFontSmoothing: "antialiased" }}>
       
-      <div style={{ padding: "20px 16px 60px 16px", flex: "1" }}>
+      <div className="app-main" style={{ padding: "20px 16px 60px 16px", flex: "1" }}>
         
         {/* 頂部品牌 Header */}
-        <header style={{ textAlign: "center", marginBottom: "26px", position: "relative" }}>
+        <header className="brand-header" style={{ textAlign: "center", marginBottom: "26px", position: "relative" }}>
           <motion.button 
             whileTap={{ scale: 0.92 }} 
             onClick={() => setShowBrandStory(true)} 
@@ -2227,11 +2227,11 @@ export default function App() {
             品牌故事
           </motion.button>
           
-          <h1 style={{ fontSize: "2.4rem", fontWeight: "900", color: blueMarine, margin: 0, letterSpacing: "4px" }}>鮮活</h1>
-          <p style={{ color: orangeCook, fontSize: "0.85rem", fontWeight: "700", letterSpacing: "3px", marginTop: "5px" }}>智鮮生活 · 快速食材對齊推薦</p>
+          <h1 style={{ fontSize: "2.15rem", fontWeight: "900", color: blueMarine, margin: 0, letterSpacing: "3px", lineHeight: 1.12 }}>鮮活</h1>
+          <p style={{ color: orangeCook, fontSize: "0.68rem", fontWeight: "800", letterSpacing: "1.5px", marginTop: "8px", lineHeight: 1.4 }}>SMART FRESH LIFE · 智鮮生活</p>
         </header>
 
-        <div style={{ maxWidth: "520px", margin: "0 auto" }}>
+        <div className="content-column" style={{ maxWidth: "520px", margin: "0 auto" }}>
           <>
             {/* STEP 1: 選主食材 */}
             {step === 1 && (
@@ -2242,7 +2242,7 @@ export default function App() {
                   <p style={{ fontSize: "0.85rem", color: "#7f8c8d", margin: "4px 0 0" }}>點選即可快速配對專屬家常料理</p>
                 </div>
                 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                <div className="fish-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
                   {fishList.map(fish => (
                     <motion.button 
                       whileHover={{ translateY: -2 }}
@@ -2260,7 +2260,7 @@ export default function App() {
                         cursor: "pointer", 
                         boxShadow: "0 6px 16px rgba(0,0,0,0.03)"
                       }}>
-                      {fish}
+                      <span>{fish}</span>
                     </motion.button>
                   ))}
                 </div>
@@ -2290,7 +2290,12 @@ export default function App() {
 
                 <div style={{ textAlign: "center", marginBottom: "16px" }}>
                   <h2 style={{ fontSize: "1.25rem", fontWeight: "800", color: blueMarine, margin: 0 }}>手邊或冰箱有什麼配料？</h2>
-                  <p style={{ color: "#7f8c8d", fontSize: "0.85rem", marginTop: "5px" }}>可複選，系統將即時計算能做的料理</p>
+                  <p style={{ color: "#7f8c8d", fontSize: "0.85rem", marginTop: "5px" }}>
+                    可複選，系統將即時計算能做的料理
+                    {selectedIngredients.length > 0 && (
+                      <span style={{ marginLeft: "6px", color: orangeCook, fontWeight: "800" }}>· 已選 {selectedIngredients.length} 項</span>
+                    )}
+                  </p>
                 </div>
 
                 {/* 動態專屬辛香料快捷按鈕 */}
@@ -2381,6 +2386,7 @@ export default function App() {
                         whileTap={{ scale: 0.98 }}
                         key={r.name} 
                         onClick={() => handleOpenRecipe(r)} 
+                        className="recipe-result-card"
                         style={{ 
                           padding: "18px", 
                           backgroundColor: "#fff", 
@@ -2392,11 +2398,11 @@ export default function App() {
                           justifyContent: "space-between",
                           alignItems: "center"
                         }}>
-                        <div>
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "700", color: blueMarine }}>{r.name}</h3>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                            <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: blueMarine }}>{r.name}</h3>
                             {r.isPerfect && selectedIngredients.length > 0 && (
-                              <span style={{ fontSize: "0.7rem", backgroundColor: "#e8f8f0", color: "#27ae60", padding: "2px 8px", borderRadius: "10px", fontWeight: "700" }}>食材全備</span>
+                              <span style={{ fontSize: "0.68rem", backgroundColor: "#e8f8f0", color: "#218a56", padding: "3px 8px", borderRadius: "999px", fontWeight: "800" }}><i className="fa-solid fa-check" style={{ marginRight: "4px" }}></i>食材全備</span>
                             )}
                           </div>
                           
@@ -2407,9 +2413,14 @@ export default function App() {
                               </span>
                             ))}
                           </div>
+                          {selectedIngredients.length > 0 && (
+                            <div style={{ fontSize: "0.72rem", color: "#7f8c8d", marginTop: "8px", fontWeight: "600" }}>
+                              已有配料 {r.matchedIngredients?.length || 0} 項 · 還缺 {Math.max(0, r.ingredients.length - (r.matchedIngredients?.length || 0))} 項
+                            </div>
+                          )}
                         </div>
 
-                        <div style={{ textAlign: "right", paddingLeft: "10px" }}>
+                        <div style={{ textAlign: "right", paddingLeft: "10px", flexShrink: 0 }}>
                           <span style={{ fontSize: "0.8rem", color: "#95a5a6", display: "block" }}>{r.nutrition}</span>
                           <span style={{ fontSize: "0.85rem", color: orangeCook, fontWeight: "bold" }}>做法 ➔</span>
                         </div>
@@ -2429,7 +2440,7 @@ export default function App() {
       </div>
 
       {/* 底部品牌足跡 (Footer) */}
-      <footer style={{ backgroundColor: "#f2efe9", padding: "36px 20px 45px 20px", textAlign: "center", borderTop: "1px solid #e5e2dc" }}>
+      <footer className="brand-footer" style={{ backgroundColor: "#f2efe9", padding: "36px 20px 45px 20px", textAlign: "center", borderTop: "1px solid #e5e2dc" }}>
         <div style={{ display: "flex", justifyContent: "center", gap: "25px", marginBottom: "20px" }}>
           <div style={{ fontSize: "0.75rem", color: "#7f8c8d", fontWeight: "600" }}>
             <i className="fa-solid fa-snowflake" style={{ color: "#3498db", marginBottom: "6px", display: "block", fontSize: "1.4rem" }}></i> 
@@ -2445,10 +2456,10 @@ export default function App() {
           </div>
         </div>
         
-        <div style={{ display: "flex", justifyContent: "center", gap: "25px", marginBottom: "20px" }}>
-           <a href="https://www.facebook.com/profile.php?id=61576506302352" target="_blank" rel="noreferrer" style={{ color: blueMarine, fontSize: "1.5rem" }}><i className="fa-brands fa-facebook"></i></a>
-           <a href="https://www.instagram.com/zhixian.life/" target="_blank" rel="noreferrer" style={{ color: blueMarine, fontSize: "1.5rem" }}><i className="fa-brands fa-instagram"></i></a>
-           <a href="https://lin.ee/7D61wiz" target="_blank" rel="noreferrer" style={{ color: blueMarine, fontSize: "1.5rem" }}><i className="fa-brands fa-line"></i></a>
+        <div className="social-links">
+           <a className="social-link" href="https://www.facebook.com/profile.php?id=61576506302352" target="_blank" rel="noreferrer" aria-label="Facebook"><i className="fa-brands fa-facebook"></i></a>
+           <a className="social-link" href="https://www.instagram.com/zhixian.life/" target="_blank" rel="noreferrer" aria-label="Instagram"><i className="fa-brands fa-instagram"></i></a>
+           <a className="social-link" href="https://lin.ee/7D61wiz" target="_blank" rel="noreferrer" aria-label="LINE 官方帳號"><i className="fa-brands fa-line"></i></a>
         </div>
         
         <p style={{ fontSize: "0.75rem", color: "#95a5a6", margin: 0 }}>© 2026 鮮活 · 智鮮生活 SMART FRESH LIFE. All Rights Reserved.</p>

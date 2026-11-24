@@ -1,42 +1,204 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+.app-shell {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(200, 111, 61, 0.07), transparent 24rem),
+    radial-gradient(circle at 88% 18%, rgba(38, 56, 79, 0.06), transparent 22rem),
+    #f6f1e8;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.app-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.26;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(38,56,79,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(38,56,79,.025) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+.app-main {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.brand-header {
+  max-width: 520px;
+  margin-inline: auto;
+  padding-top: 2px;
+}
+
+.brand-header h1 {
+  position: relative;
+  display: inline-block;
+  font-family: "M PLUS Rounded 1c", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+}
+
+.brand-header h1::after {
+  content: "";
+  display: block;
+  width: 42px;
+  height: 3px;
+  margin: 7px auto 0;
+  border-radius: 999px;
+  background: #c86f3d;
+}
+
+.brand-header p {
+  letter-spacing: 2px !important;
+}
+
+.content-column {
+  width: 100%;
+}
+
+.fish-grid button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 86px;
+  overflow: hidden;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.fish-grid button::after {
+  content: "";
+  position: absolute;
+  right: -22px;
+  bottom: -28px;
+  width: 68px;
+  height: 68px;
+  border: 1px solid rgba(200,111,61,.12);
+  border-radius: 50%;
+}
+
+.fish-grid button:hover {
+  border-color: rgba(200,111,61,.55) !important;
+  box-shadow: 0 12px 24px rgba(38,56,79,.09) !important;
+}
+
+.brand-footer {
+  position: relative;
+  background: rgba(242,239,233,.92) !important;
+  backdrop-filter: blur(12px);
+}
+
+.brand-footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 52px;
+  height: 3px;
+  transform: translateX(-50%);
+  border-radius: 0 0 999px 999px;
+  background: #c86f3d;
+}
+
+.social-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 25px;
+  margin-bottom: 20px;
+}
+
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: #26384f;
+  font-size: 23px;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.social-link i {
+  display: block;
+  line-height: 1;
+}
+
+@media (min-width: 700px) {
+  .app-main {
+    padding-top: 34px !important;
   }
-  to {
-    transform: rotate(360deg);
+
+  .brand-header {
+    margin-bottom: 32px !important;
+  }
+
+  .content-column {
+    max-width: 620px !important;
+  }
+
+  .fish-grid {
+    gap: 18px !important;
+  }
+
+  .fish-grid button {
+    min-height: 104px;
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+@media (max-width: 520px) {
+  .recipe-result-card {
+    border-radius: 14px !important;
+    padding: 16px 14px !important;
+  }
+
+  .app-main {
+    padding: 14px 14px 48px !important;
+  }
+
+  .brand-header {
+    margin-bottom: 20px !important;
+  }
+
+  .brand-header h1 {
+    font-size: 2.15rem !important;
+  }
+
+  .brand-header h1::after {
+    width: 36px;
+    margin-top: 5px;
+  }
+
+  .brand-header p {
+    font-size: 0.68rem !important;
+  }
+
+  .fish-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  .fish-grid button {
+    min-height: 92px;
+    border-radius: 14px !important;
+    padding: 11px 8px !important;
+    font-size: 1.02rem !important;
+  }
+
+  .brand-footer {
+    padding: 28px 16px 36px !important;
   }
 }
 
-.card {
-  padding: 2em;
-}
+@media (max-width: 380px) {
+  .app-main {
+    padding-inline: 12px !important;
+  }
 
-.read-the-docs {
-  color: #888;
+  .fish-grid {
+    gap: 8px !important;
+  }
+
+  .fish-grid button {
+    min-height: 84px;
+    padding: 9px 6px !important;
+  }
 }
